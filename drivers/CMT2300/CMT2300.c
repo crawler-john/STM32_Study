@@ -4,6 +4,7 @@
 #include "CMT2300.h"
 #include "string.h"
 #include "delay.h"
+#include "SEGGER_RTT.h"
 
 byte cmt2300A_para[FTP8_LENGTH]=
 {
@@ -151,7 +152,7 @@ void Spi3Init(void)
 
 	RCC_APB2PeriphClockCmd(RFM300M_SDIO_RCC,ENABLE);
 	GPIO_InitStructure.GPIO_Pin = SDIO_PIN;        
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;      //开漏输出
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;      //开漏输出
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;    //最高输出速率50MHz
 	GPIO_Init(SDIO_GPIO, &GPIO_InitStructure);
 	
@@ -215,9 +216,9 @@ byte Spi3ReadReg(byte addr)
 		
 		addr<<=1;
 	}
-
+	SetSDA();
 	//read value
-	//InputSDA();
+	InputSDA();
 	for (i=8;i>0;i--)
 	{
 		val<<=1;
@@ -298,7 +299,7 @@ byte Spi3ReadFIFOByte(void)
 	//set FCSB to low and delay
 	Spi3Init();
 	ClrFCSB();
-	//InputSDA();
+	InputSDA();
 	delay_us(SPI3_SPEED<<2);
     // read one byte
     for (i=0;i<8;i++)
@@ -599,8 +600,10 @@ void CMT2300_init(void)
     SelectIntSource(INT_TX_DONE,INT_CRC_PASS);
     
     Spi3WriteReg(0x65,0x22);
+		
     //
-    AntennaDiversity_Rx();
+    //AntennaDiversity_Rx();
+	SetOperaStatus(MODE_GO_SLEEP);	
 	// go sleep
 	SetOperaStatus(MODE_GO_SLEEP);
 }
@@ -613,59 +616,86 @@ byte SendMessage(byte *p,byte len)
 
 	SetTxpayloadLength(len);
 
-	SetOperaStatus(MODE_STA_STBY);
+	Enable_fifo_write();
+	ClearFifo();
+	SetOperaStatus(MODE_GO_STBY);	//MODE_STA_STBY
 	// verify transmit state
 	do {
 		val=GetOperaStatus();
-		if (val==MODE_STA_STBY)
+		if (val==MODE_STA_STBY)		//MODE_STA_STBY
 			break;
 	} while(1);
     // write FIFO
-	Enable_fifo_write();
+	
 	for (i=0;i<len;i++)
 	{
 		Spi3WriteFIFOByte(p[i]);
 	}
 	//go transmit
 
-	SetOperaStatus(MODE_STA_TX);
-	delay_ms(500);
-    
+	SetOperaStatus(MODE_GO_TX);
+  //delay_ms(300);
     
 // verify transmit done
-	/*
+	
 	do {
-            val=GetIrqFlag_Tx();
-            if (val==TX_DONE_FLAG)
-            {
-                ClearInt(0x00);
-                break;
-            }
+		//Spi3WriteReg(0X68,0X04);
+		//delay_ms(500);
+		//val=Spi3ReadReg(0X68);
+		//SEGGER_RTT_printf(0, "0X68:%x\n",val);
+		
+		val=GetIrqFlag_Tx();
+		//SEGGER_RTT_printf(0, "GetIrqFlag_Tx:%d\n",val);
+		if (val==TX_DONE_FLAG)
+		{	
+			
+			ClearInt(0x00);
+			break;
+		}
 		
 	} while(1);
-	*/
+	
 	// go sleep mode
 	SetOperaStatus(MODE_GO_SLEEP);
-	RFM300H_SW = 0;
+	RFM300H_SW = 0;	
 	return 0x01;
 }
 // receive
 byte GetMessage(byte *p)
 {
+	int val = 0;
+	int index = 0;
 	byte i=0x00;
     
 	if(RFM300H_SW==0)
 	{
 		SetOperaStatus(MODE_GO_RX);//进入接收模式
-        Enable_fifo_read();
-		RFM300H_SW = 1;       
+		
+    Enable_fifo_read();
+		do {
+			val=GetOperaStatus();
+			
+			if (val==MODE_STA_RX)
+			{
+				break;
+			}
+		} while(1);
+
+			RFM300H_SW = 1; 	
 	}
 	if(RFM300H_SW==1)
-	{
-		if(GPIO3==1)
-			RFM300H_SW = 2;
-		else
-			return 0;
+	{	
+		for(index =0 ;index<500;index++)
+		{
+			if(GPIO3==1)
+			{
+				RFM300H_SW = 2;
+				//SEGGER_RTT_printf(0, "GetIrqFlag_Tx:%d\n",index);
+				break;
+			}
+			delay_ms(1);	
+		}
+		
 	}
 	if(RFM300H_SW==2)
 	{
@@ -683,3 +713,95 @@ byte GetMessage(byte *p)
 	return 0;
 }
 
+
+char setChannel(char channel)
+{
+	byte val=0x00;
+	if(channel<17)
+	{
+		if(channel==1)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_433M,8);
+		}
+		if(channel==2)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_434M,8);
+		}
+		if(channel==3)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_435M,8);
+		}
+		if(channel==4)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_436M,8);
+		}  
+		if(channel==5)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_437M,8);
+		}
+		if(channel==6)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_438M,8);
+		}
+		if(channel==7)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_439M,8);
+		}
+		if(channel==8)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_440M,8);
+		} 
+		if(channel==9)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_441M,8);
+		}
+		if(channel==10)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_442M,8);
+		}
+		if(channel==11)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_443M,8);
+		}
+		if(channel==12)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_444M,8);
+		} 
+		if(channel==13)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_445M,8);
+		}
+		if(channel==14)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_446M,8);
+		}
+		if(channel==15)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_447M,8);
+		}
+		if(channel==16)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_448M,8);
+		} 
+		SetOperaStatus(MODE_GO_STBY);
+		do {
+			val=GetOperaStatus();
+			if (val==MODE_STA_STBY)		//MODE_STA_STBY
+				break;
+		} while(1);
+		SetConfigBank();
+		SetOperaStatus(MODE_GO_SLEEP);
+		do {
+			val=GetOperaStatus();
+			if (val==MODE_STA_SLEEP)		//MODE_STA_SLEEP
+				break;
+		} while(1);
+		SEGGER_RTT_printf(0, "setChannel:%d\n",channel);
+		return 0;
+  } 
+	else
+	{
+		return 1;
+	}
+}
+	

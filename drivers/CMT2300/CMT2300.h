@@ -38,7 +38,7 @@ typedef unsigned int word;
 #define FTP8_LENGTH  0x60
 #define FTP16_LENGTH 0x30
 
-#define	SPI3_SPEED	10
+#define	SPI3_SPEED	2
 // spi define
 //#define _CSB  PBout(13)
 //#define _FCSB PBout(10)
@@ -414,5 +414,5 @@ void CMT2300_init(void);
 byte SendMessage(byte *p,byte len);
 byte GetMessage(byte *p);
 
-
+char setChannel(char channel);
 #endif 
