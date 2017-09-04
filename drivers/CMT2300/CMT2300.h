@@ -13,25 +13,25 @@
 typedef unsigned char byte;
 typedef unsigned int word;
 
-#define RFM300M_SDIO_RCC       	RCC_APB2Periph_GPIOB
-#define SDIO_GPIO            		GPIOB
-#define SDIO_PIN               	(GPIO_Pin_14)
+#define RFM300M_SDIO_RCC       	RCC_APB2Periph_GPIOC
+#define SDIO_GPIO            		GPIOC
+#define SDIO_PIN               	(GPIO_Pin_10)
 
-#define RFM300M_CSB_RCC         RCC_APB2Periph_GPIOB
-#define CSB_GPIO              	GPIOB
-#define CSB_PIN               	(GPIO_Pin_13)
+#define RFM300M_CSB_RCC         RCC_APB2Periph_GPIOC
+#define CSB_GPIO              	GPIOC
+#define CSB_PIN               	(GPIO_Pin_11)
 
-#define RFM300M_SCK_RCC     		RCC_APB2Periph_GPIOB
-#define SCK_GPIO               	GPIOB
-#define SCK_PIN             		(GPIO_Pin_12)
+#define RFM300M_SCK_RCC     		RCC_APB2Periph_GPIOC
+#define SCK_GPIO               	GPIOC
+#define SCK_PIN             		(GPIO_Pin_7)
 
-#define RFM300M_FCSB_RCC     		RCC_APB2Periph_GPIOB
-#define FCSB_GPIO            		GPIOB
-#define FCSB_PIN             		(GPIO_Pin_10)
+#define RFM300M_FCSB_RCC     		RCC_APB2Periph_GPIOA
+#define FCSB_GPIO            		GPIOA
+#define FCSB_PIN             		(GPIO_Pin_0)
 
 #define RFM300M_GPIO3_RCC      	RCC_APB2Periph_GPIOB
 #define GPIO3_GPIO             	GPIOB
-#define GPIO3_PIN              	(GPIO_Pin_11)
+#define GPIO3_PIN              	(GPIO_Pin_15)
 
 
 

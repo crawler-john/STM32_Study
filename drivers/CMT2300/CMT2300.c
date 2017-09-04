@@ -1,11 +1,12 @@
-//#include "header.h"
-//#include "extern_var.h"
 #include "var.h"
 #include "CMT2300.h"
 #include "string.h"
-#include "delay.h"
+#include "rthw.h"
 #include "SEGGER_RTT.h"
 
+
+
+#ifdef RFM_433
 byte cmt2300A_para[FTP8_LENGTH]=
 {
 //[CMT Bank]
@@ -122,6 +123,127 @@ byte cmt2300A_para[FTP8_LENGTH]=
 0x3F,  //0x5E
 0x7F   //0x5F
 };
+#endif
+
+#ifdef RFM_915
+unsigned char cmt2300A_para[FTP8_LENGTH]=
+{
+//[CMT Bank]
+//Addr  Value
+0x00,//0x00  
+0x66,//0x01  
+0xEC,//0x02  
+0x1D,//0x03  
+0xF0,//0x04  
+0x80,//0x05  
+0x14,//0x06
+0x08,//0x07  
+0x11,//0x08  
+0x03,//0x09  
+0x02,//0x0A  
+0x00,//0x0B  
+
+//[System Bank]
+//Addr  Value
+0xAE,//0x0C  
+0xE0,//0x0D  
+0x35,//0x0E  
+0x00,//0x0F  
+0x00,//0x10  
+0xF4,//0x11  
+0x10,//0x12  
+0xE2,//0x13  
+0x42,//0x14  
+0x20,//0x15  
+0x00,//0x16  
+0x81,//0x17  
+
+//[Frequency Bank]
+//Addr  Value
+0x46,//0x18  
+0x4C,//0x19  
+0xA2,//0x1A  
+0x87,//0x1B  
+0x46,//0x1C  
+0x41,//0x1D  
+0x49,//0x1E  
+0x17,//0x1F  
+
+//[Data Rate Bank]
+//Addr  Value
+0x32,//0x20  
+0x18,//0x21  
+0x10,//0x22  
+0x99,//0x23  
+0xC2,//0x24  
+0xBD,//0x25  
+0x06,//0x26  
+0x0B,//0x27  
+0x9F,//0x28  
+0x26,//0x29  
+0x29,//0x2A  
+0x29,//0x2B  
+0xC0,//0x2C  
+0x51,//0x2D  
+0x2A,//0x2E  
+0x53,//0x2F  
+0x00,//0x30  
+0x00,//0x31  
+0xB4,//0x32  
+0x00,//0x33  
+0x00,//0x34  
+0x01,//0x35  
+0x00,//0x36  
+0x00,//0x37  
+
+//[Baseband Bank]
+//Addr  Value
+0x12,//0x38  
+0x04,//0x39  
+0x00,//0x3A  
+0xAA,//0x3B  
+0x02,//0x3C  
+0x00,//0x3D  
+0x00,//0x3E  
+0x00,//0x3F  
+0x00,//0x40  
+0x00,//0x41  
+0x00,//0x42  
+0xD4,//0x43  
+0x2D,//0x44  
+0x01,//0x45  
+0x1F,//0x46  
+0x00,//0x47  
+0x00,//0x48  
+0x00,//0x49  
+0x00,//0x4A  
+0x00,//0x4B  
+0x01,//0x4C  
+0x00,//0x4D  
+0x00,//0x4E  
+0x60,//0x4F  
+0xFF,//0x50  
+0x00,//0x51  
+0x00,//0x52  
+0x3F,//0x53  
+0x10,//0x54  
+
+//[TX Bank]
+//Addr  Value
+0x50,//0x55  
+0x26,//0x56  
+0x03,//0x57  
+0x00,//0x58  
+0x42,//0x59  
+0xB0,//0x5A  
+0x00,//0x5B  
+0x8A,//0x5C  
+0x18,//0x5D  
+0x3F,//0x5E  
+0x7F //0x5F  
+};
+
+#endif
 
 void InputSDA(void)
 {
@@ -199,7 +321,7 @@ byte Spi3ReadReg(byte addr)
    // Set CSB to low level and delay
 	Spi3Init();
 	ClrCSB();
-	delay_us(SPI3_SPEED);
+	rt_hw_us_delay(SPI3_SPEED);
 	
 	//write address
 	for (i=0;i<8;i++)
@@ -210,9 +332,9 @@ byte Spi3ReadReg(byte addr)
 			ClrSDA();
 
 		ClrSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 		SetSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 		
 		addr<<=1;
 	}
@@ -223,9 +345,9 @@ byte Spi3ReadReg(byte addr)
 	{
 		val<<=1;
 		ClrSCL();
-		delay_us(SPI3_SPEED);		
+		rt_hw_us_delay(SPI3_SPEED);		
 		SetSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 
 		if (SDA_H())
 		val|=0x01;
@@ -234,7 +356,7 @@ byte Spi3ReadReg(byte addr)
     
 	// Set CLK to low level and delay
 	ClrSCL();
-	delay_us(SPI3_SPEED);
+	rt_hw_us_delay(SPI3_SPEED);
 	Spi3Init();
 
 	// return value
@@ -251,7 +373,7 @@ void Spi3WriteReg(byte addr,byte value)
     // Set CLK to low level and delay
 	Spi3Init();
 	ClrCSB();
-	delay_us(SPI3_SPEED);
+	rt_hw_us_delay(SPI3_SPEED);
 	
 	//write address
 	for (i=0;i<8;i++)
@@ -262,9 +384,9 @@ void Spi3WriteReg(byte addr,byte value)
 			ClrSDA();
 
 		ClrSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 		SetSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 		
 		addr<<=1;
 	}
@@ -278,16 +400,16 @@ void Spi3WriteReg(byte addr,byte value)
 			ClrSDA();
 
 		ClrSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 		SetSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 
 		value<<=1;
 	}
     
 	// Set CLK to low level and delay
 	ClrSCL();
-	delay_us(SPI3_SPEED);
+	rt_hw_us_delay(SPI3_SPEED);
 	Spi3Init();
 }
 
@@ -300,16 +422,16 @@ byte Spi3ReadFIFOByte(void)
 	Spi3Init();
 	ClrFCSB();
 	InputSDA();
-	delay_us(SPI3_SPEED<<2);
+	rt_hw_us_delay(SPI3_SPEED<<2);
     // read one byte
     for (i=0;i<8;i++)
     {
 		val<<=1;
 		ClrSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 		
 		SetSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 		
 		if (SDA_H())
 		val|=0x01;
@@ -317,10 +439,10 @@ byte Spi3ReadFIFOByte(void)
     }
     // set SCL to low and delay more than 2us
     ClrSCL();
-	delay_us(SPI3_SPEED<<1);
+	rt_hw_us_delay(SPI3_SPEED<<1);
 	// set FCSB to high and delay more than 4us
 	Spi3Init();
-	delay_us(SPI3_SPEED<<2);
+	rt_hw_us_delay(SPI3_SPEED<<2);
 	
 	// return value
 	return val;
@@ -333,7 +455,7 @@ void Spi3WriteFIFOByte(byte value)
 	//set FCSB to low and delay
 	Spi3Init();
 	ClrFCSB();
-	delay_us(SPI3_SPEED<<2);
+	rt_hw_us_delay(SPI3_SPEED<<2);
 	
     // write one byte
     for (i=0;i<8;i++)
@@ -346,19 +468,19 @@ void Spi3WriteFIFOByte(byte value)
 		
 		
 		ClrSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 		SetSCL();
-		delay_us(SPI3_SPEED);
+		rt_hw_us_delay(SPI3_SPEED);
 
 		value<<=1;
 
     }
     // set SCL to low and delay more than 2us
     ClrSCL();
-	delay_us(SPI3_SPEED<<1);
+	rt_hw_us_delay(SPI3_SPEED<<1);
 	// set FCSB to high and delay more than 4us
 	Spi3Init();
-	delay_us(SPI3_SPEED<<2);
+	rt_hw_us_delay(SPI3_SPEED<<2);
 
 }
 
@@ -366,7 +488,7 @@ void Spi3WriteFIFOByte(byte value)
 void SetConfigBank(void)
 {
 	byte i;
-    
+ #ifdef  RFM_433
     if(RFM300H_Rate<4)
     {
         //if(RFM300H_Rate==0)
@@ -392,6 +514,36 @@ void SetConfigBank(void)
     }
 	for (i=0;i<FTP8_LENGTH;i++)
 		Spi3WriteReg(i,cmt2300A_para[i]);	
+#endif
+
+
+#ifdef RFM_915
+		if(RFM300H_Rate<5)
+    {
+        if(RFM300H_Rate==1)
+        {
+            memcpy(&cmt2300A_para[32], RFM300H_Rate_2K,17);
+            memcpy(&cmt2300A_para[89], &RFM300H_Rate_2K[17],2);
+        }
+        if(RFM300H_Rate==2)
+        {
+            memcpy(&cmt2300A_para[32], RFM300H_Rate_5K,17);
+            memcpy(&cmt2300A_para[89], &RFM300H_Rate_5K[17],2);
+        }
+        if(RFM300H_Rate==3)
+        {
+            memcpy(&cmt2300A_para[32], RFM300H_Rate_10K,17);
+            memcpy(&cmt2300A_para[89], &RFM300H_Rate_10K[17],2);
+        }
+        if(RFM300H_Rate==4)
+        {
+            memcpy(&cmt2300A_para[32], RFM300H_Rate_20K,17);
+            memcpy(&cmt2300A_para[89], &RFM300H_Rate_20K[17],2);
+        }       
+    }
+		for (i=0;i<FTP8_LENGTH;i++)
+			Spi3WriteReg(i,cmt2300A_para[i]);	
+#endif
 }
 
 // read the RSSI value
@@ -424,7 +576,7 @@ void SoftReset(void)
 { 
 	Spi3WriteReg(CMT23_SOFTRST,0xFF);
 	// at least 10ms
-	delay_ms(20); 
+	rt_hw_ms_delay(20); 
 }
 // disable EEPROM configuration 
 // 1 : disable EEPROM configuration ; 0 :enable EEPROM configuration
@@ -467,7 +619,20 @@ void Enable_fifo_restore(void)
 	val=Spi3ReadReg(CMT23_FIFO_CLR);
 	Spi3WriteReg(CMT23_FIFO_CLR,val|FIFO_RESTORE);
 }
-
+void Enable_fifo_TX(void)
+{    
+	byte val;
+	val=Spi3ReadReg(CMT23_FIFO_CTL);
+	val|=FIFO_RX_TX_SEL;
+	Spi3WriteReg(CMT23_FIFO_CTL,val);
+}
+void Enable_fifo_RX(void)
+{
+	byte val;
+	val=Spi3ReadReg(CMT23_FIFO_CTL);
+	val&=~FIFO_RX_TX_SEL;
+	Spi3WriteReg(CMT23_FIFO_CTL,val);
+}
 // merge fifo
 void Enable_fifo_merge(void)
 {
@@ -594,6 +759,7 @@ void CMT2300_init(void)
 	
 	ClearInt(0x00);
 	ClearFifo();
+	Enable_fifo_merge();
 	// enable TX_DONE ,PACKET_OK interrupt
     EnableInt(TX_DONE_EN|CRC_PASS_EN);
     //
@@ -613,7 +779,7 @@ byte SendMessage(byte *p,byte len)
 {
 	byte i=0;
 	byte val=0x00;
-
+	Enable_fifo_TX();
 	SetTxpayloadLength(len);
 
 	Enable_fifo_write();
@@ -634,13 +800,13 @@ byte SendMessage(byte *p,byte len)
 	//go transmit
 
 	SetOperaStatus(MODE_GO_TX);
-  //delay_ms(300);
+  //rt_hw_ms_delay(300);
     
 // verify transmit done
 	
 	do {
 		//Spi3WriteReg(0X68,0X04);
-		//delay_ms(500);
+		//rt_hw_ms_delay(500);
 		//val=Spi3ReadReg(0X68);
 		//SEGGER_RTT_printf(0, "0X68:%x\n",val);
 		
@@ -670,7 +836,7 @@ byte GetMessage(byte *p)
 	if(RFM300H_SW==0)
 	{
 		SetOperaStatus(MODE_GO_RX);//进入接收模式
-		
+		Enable_fifo_RX();
     Enable_fifo_read();
 		do {
 			val=GetOperaStatus();
@@ -685,7 +851,7 @@ byte GetMessage(byte *p)
 	}
 	if(RFM300H_SW==1)
 	{	
-		for(index =0 ;index<500;index++)
+		for(index =0 ;index<400;index++)
 		{
 			if(GPIO3==1)
 			{
@@ -693,7 +859,7 @@ byte GetMessage(byte *p)
 				//SEGGER_RTT_printf(0, "GetIrqFlag_Tx:%d\n",index);
 				break;
 			}
-			delay_ms(1);	
+			rt_hw_ms_delay(1);	
 		}
 		
 	}
@@ -717,6 +883,7 @@ byte GetMessage(byte *p)
 char setChannel(char channel)
 {
 	byte val=0x00;
+#ifdef RFM_433	
 	if(channel<17)
 	{
 		if(channel==1)
@@ -803,5 +970,95 @@ char setChannel(char channel)
 	{
 		return 1;
 	}
+#endif
+	
+#ifdef RFM_915
+		if(channel<17)
+	{
+		if(channel==1)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_915M,8);
+		}
+		if(channel==2)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_916M,8);
+		}
+		if(channel==3)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_917M,8);
+		}
+		if(channel==4)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_918M,8);
+		}  
+		if(channel==5)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_919M,8);
+		}
+		if(channel==6)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_920M,8);
+		}
+		if(channel==7)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_921M,8);
+		}
+		if(channel==8)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_922M,8);
+		} 
+		if(channel==9)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_923M,8);
+		}
+		if(channel==10)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_924M,8);
+		}
+		if(channel==11)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_925M,8);
+		}
+		if(channel==12)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_926M,8);
+		} 
+		if(channel==13)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_927M,8);
+		}
+		if(channel==14)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_928M,8);
+		}
+		if(channel==15)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_929M,8);
+		}
+		if(channel==16)
+		{
+			memcpy(&cmt2300A_para[24], RFM300H_Channl_930M,8);
+		} 
+		SetOperaStatus(MODE_GO_STBY);
+		do {
+			val=GetOperaStatus();
+			if (val==MODE_STA_STBY)		//MODE_STA_STBY
+				break;
+		} while(1);
+		SetConfigBank();
+		SetOperaStatus(MODE_GO_SLEEP);
+		do {
+			val=GetOperaStatus();
+			if (val==MODE_STA_SLEEP)		//MODE_STA_SLEEP
+				break;
+		} while(1);
+		SEGGER_RTT_printf(0, "setChannel:%d\n",channel);
+		return 0;
+  } 
+	else
+	{
+		return 1;
+	}
+#endif
 }
 	
